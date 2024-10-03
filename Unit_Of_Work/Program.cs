@@ -1,6 +1,7 @@
 ﻿using Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Serilog;
 using StackExchange.Redis;
 using Unit_Of_Work.Common;
 using Unit_Of_Work.Data;
@@ -11,6 +12,17 @@ using Unit_Of_Work.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
+
+//logging
+builder.Host.UseSerilog((context, services, configuration) => configuration
+    .ReadFrom.Configuration(context.Configuration) 
+    .Enrich.FromLogContext());
+// Xóa các provider logging mặc định và thêm Serilog
+builder.Logging.ClearProviders();
+builder.Logging.AddSerilog();
+
+
+//MemoryCache
 var cacheDurationInHours = builder.Configuration.GetValue<int>("CacheSettings:CacheDurationInHours");
 var cacheDuration = TimeSpan.FromHours(cacheDurationInHours);
 builder.Services.AddSingleton(new CacheSetting
@@ -23,6 +35,7 @@ builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = "localhost:6379,abortConnect=false";
 });
 
+//RedisCache
 #region Redis
 var redisConfiguration = new RedisConfiguration();
 builder.Configuration.GetSection("RedisConfiguration").Bind(redisConfiguration);

@@ -13,20 +13,21 @@ namespace Unit_Of_Work.Controllers
     public class StudentsController : ControllerBase
     {
         private readonly ISinhVienRepository _sinhVien;
+        private readonly ILogger<StudentsController> _logger;
 
-        public StudentsController(ISinhVienRepository sinhVien, IDistributedCache cache)
+        public StudentsController(ISinhVienRepository sinhVien, ILogger<StudentsController> logger)
         {
             _sinhVien = sinhVien;
+            _logger = logger;
         }
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-                var students = await _sinhVien.GetAll();
-                cacheData = JsonConvert.SerializeObject(students);
-                await _cache.SetStringAsync(cacheKey, cacheData, new DistributedCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30),
-                   
+            var students = await _sinhVien.GetAll();
+            var studentsJson = System.Text.Json.JsonSerializer.Serialize(students);
+            _logger.LogInformation("Get students success! => {students}", studentsJson);
+            return Ok(students);
+
         }
 
 
